@@ -10,7 +10,7 @@ from app.models.knowledge import Knowledge
 
 class KnowledgeRepository:
     def __init__(self, session: SessionDep):
-        self._session: AsyncSession = session
+        self._session = session
 
     async def create(
         self,

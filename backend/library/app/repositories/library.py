@@ -2,7 +2,6 @@ import uuid
 from typing import Optional
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import SessionDep
 from app.models.library import Library, SourceType, LibraryStatus
@@ -10,7 +9,7 @@ from app.models.library import Library, SourceType, LibraryStatus
 
 class LibraryRepository:
     def __init__(self, session: SessionDep):
-        self._session: AsyncSession = session
+        self._session = session
 
     async def create(
         self,

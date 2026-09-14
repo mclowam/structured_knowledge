@@ -37,6 +37,8 @@ services:
     depends_on:
       library-postgres:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - library-network
     restart: on-failure
@@ -80,7 +82,7 @@ services:
       retries: 5
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: knowledge_library_minio
     environment:
       MINIO_ROOT_USER: admin
