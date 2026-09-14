@@ -1,9 +1,7 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-
 import jwt
 from jwt import InvalidTokenError
-
 from app.core.config import settings
 
 

@@ -7,8 +7,12 @@ services:
     environment:
       DB_HOST: auth-postgres
       DB_PORT: 5432
+    env_file:
+      - ./backend/auth/.env
     ports:
       - "8001:8000"
+    volumes:
+      - ./backend/auth:/service
     depends_on:
       auth-postgres:
         condition: service_healthy

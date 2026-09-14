@@ -5,6 +5,7 @@ from app.core.security.token import JWTTokenProvider
 from app.db.session import SessionDep
 from app.repositories.users import UserRepository
 from app.services.login import LoginService
+from app.services.refresh import RefreshService
 from app.services.register import RegisterService
 from app.services.users import UserService
 
@@ -67,11 +68,11 @@ def get_refresh_service(
         tokens=tokens
     )
 
-def get_update_user_service(
-        users: UserRepository = Depends(get_user_repository),
-        hasher: PasswordHashed = Depends(get_password_hasher),
-) -> UserUpdateService:
-    return UserUpdateService(
-        users=users,
-        hasher=hasher,
-    )
+# def get_update_user_service(
+#         users: UserRepository = Depends(get_user_repository),
+#         hasher: PasswordHashed = Depends(get_password_hasher),
+# ) -> UserUpdateService:
+#     return UserUpdateService(
+#         users=users,
+#         hasher=hasher,
+#     )

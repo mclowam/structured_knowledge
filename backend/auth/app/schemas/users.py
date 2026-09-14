@@ -36,6 +36,9 @@ class LoginResponseSchema(BaseModel):
 class RefreshTokenSchema(BaseModel):
     refresh_token: str
 
+class UserPostCreateSchema(BaseModel):
+    user_id: uuid.UUID
+    username: str
 
 class UpdateUserSchema(BaseModel):
     username: str | None = None
