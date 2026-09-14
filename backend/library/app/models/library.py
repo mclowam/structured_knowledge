@@ -26,7 +26,7 @@ class Library(Base):
         nullable=False,
         default=LibraryStatus.pending,
     )
-    # error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     text_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     compressed_content: Mapped[str | None] = mapped_column(Text, nullable=True)
     order: Mapped[int | None] = mapped_column(Integer, nullable=True)
