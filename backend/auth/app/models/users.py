@@ -7,7 +7,6 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.db.base import Base
 
 
-
 class User(Base):
     __tablename__ = "users"
 

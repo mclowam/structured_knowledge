@@ -20,6 +20,46 @@ services:
       - auth-network
     restart: on-failure
 
+  library:
+    build:
+      context: ./backend/library
+      dockerfile: Dockerfile
+    container_name: knowledge_library
+    environment:
+      DB_HOST: library-postgres
+      DB_PORT: 5432
+    env_file:
+      - ./backend/library/.env
+    ports:
+      - "8002:8000"
+    volumes:
+      - ./backend/library:/service
+    depends_on:
+      library-postgres:
+        condition: service_healthy
+    networks:
+      - library-network
+    restart: on-failure
+
+  library-postgres:
+    image: postgres:16-alpine
+    container_name: knowledge_library_pg
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: library_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata_library:/var/lib/postgresql/data
+    networks:
+      - library-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d library_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   auth-postgres:
     image: postgres:16-alpine
     container_name: knowledge_auth_pg
@@ -39,9 +79,33 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    container_name: knowledge_library_minio
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: minio_password123
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - library-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   pgdata_auth:
+  pgdata_library:
+  minio_data:
 
 networks:
   auth-network:
+    driver: bridge
+  library-network:
     driver: bridge
