@@ -1,5 +1,6 @@
 import os
 from os import getenv
+import aioboto3
 
 
 class Config:
