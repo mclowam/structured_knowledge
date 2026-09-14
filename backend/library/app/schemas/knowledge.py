@@ -1,31 +1,23 @@
-import enum
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class KnowledgeResponseSchema(BaseModel):
+    model_config = {"from_attributes": True}
+
     id: uuid.UUID
     user_id: uuid.UUID
 
     title: str
-    description: str
+    description: Optional[str] = None
 
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-
-class SourceType(str, enum.Enum):
-    file = "file"
-    url = "url"
+    created_at: datetime
+    updated_at: Optional[datetime] = None
 
 
-class LibraryStatus(str, enum.Enum):
-    pending = "pending"
-    extracting = "extracting"
-    extracted = "extracted"
-    compressing = "compressing"
-    compressed = "compressed"
-    quiz_ready = "quiz_ready"
-    failed = "failed"
+class KnowledgeCreateSchema(BaseModel):
+    title: str
+    description: Optional[str] = None

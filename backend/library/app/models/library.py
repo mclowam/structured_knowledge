@@ -4,7 +4,7 @@ from sqlalchemy import String, ForeignKey, Text, Enum as SAEnum, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from app.db.base import Base
-from app.schemas.knowledge import SourceType, LibraryStatus
+from app.schemas.enums import SourceType, LibraryStatus
 
 
 class Library(Base):
