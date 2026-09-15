@@ -65,6 +65,7 @@ Library configuration is `app/core/config.py: Config`. It reads:
 | `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, `MINIO_BUCKET` | no | Inside Compose, endpoint must be `http://minio:9000`. |
 | `OPENAI_API_KEY` | **yes** | `Config` raises `RuntimeError` during import when missing. |
 | `COMPRESSION_MODEL` | no | Defaults to `gpt-5-mini`. |
+| `WORKER_POLL_INTERVAL_SECONDS` | no | Worker tick interval; defaults to 10 seconds. |
 
 Because `settings = Config()` is created at module import time, every library
 command that imports `app.core.config` needs `OPENAI_API_KEY`, including the
@@ -119,9 +120,11 @@ refresh tokens last 30 days. Refresh tokens are not persisted or revoked.
 ## 4. Library service overview
 
 `backend/library/app/main.py` currently exposes **only** `GET /health`.
-There are no Library HTTP routes, auth integration, background jobs, queue
-consumers, or poll-worker. Domain services can be invoked by application code or
-manual scripts, but nothing automatically schedules them.
+There are no Library HTTP routes, auth integration, background jobs, or queue
+consumers. A standalone polling worker exists at `app/worker.py`, but Compose
+does not yet define a separate worker service: start it with a separate Python
+process. Domain services can also be invoked directly by application code or
+manual scripts.
 
 Important directories:
 
@@ -139,6 +142,7 @@ backend/library/
 │   ├── services/{knowledge,library,extraction,compression,errors}.py
 │   ├── storage/{document_storage,object_proxy}.py
 │   └── use_cases/{extraction,compression}.py
+├── app/worker.py
 ├── scripts/{smoke_extraction,smoke_compression,smoke_compression_service}.py
 └── tests/fixtures/smoke.pdf
 ```
@@ -334,7 +338,40 @@ service = build_compression_service(session, settings)
 The factory creates a fresh `CompressionAgent` and `CompressionService` on
 every call. It does not cache either object.
 
-## 7. Manual smoke scripts
+## 7. Polling worker
+
+Location: `backend/library/app/worker.py`.
+
+The worker is a simple `asyncio` process with no Celery, RabbitMQ, external
+worker dependency, row locking, or graceful-shutdown handler. Run it separately
+from Uvicorn:
+
+```powershell
+Set-Location backend/library
+$env:OPENAI_API_KEY = "<your key>"
+python -m app.worker
+```
+
+Its functions are:
+
+- `process_pending(session_factory, settings)` selects all `pending` Library
+  IDs and invokes `build_extraction_service(session, settings).run(library)`.
+- `process_extracted(session_factory, settings)` selects all `extracted`
+  Library IDs and invokes
+  `build_compression_service(session, settings).run(library)`.
+- `run_worker_loop(settings)` runs pending first, then extracted, then sleeps
+  for `settings.WORKER_POLL_INTERVAL_SECONDS`.
+
+The discovery query uses one short session; every selected library is reloaded and
+processed in a separate session. A per-library `try/except` logs unexpected
+worker errors and lets later records continue. The services themselves persist
+their normal failures as `failed` with an error message.
+
+The extracted query runs after pending processing. Consequently, a pending item
+that extraction successfully changes to `extracted` can be compressed in that
+same tick.
+
+## 8. Manual smoke scripts
 
 These scripts are manual checks, not CI tests.
 
@@ -382,17 +419,28 @@ docker compose exec -T `
   library python scripts/smoke_compression_service.py
 ```
 
-No poll-worker currently invokes either smoke script or automatically advances an
-`extracted` row to `compressing`.
+`scripts/smoke_worker.py` uploads a fixture PDF for one pending Library and
+creates another Library with extracted text. It invokes one pending pass and one
+extracted pass, then prints both IDs and final statuses:
 
-## 8. Known limitations and follow-up work
+```powershell
+docker compose exec -T `
+  -e OPENAI_API_KEY=$env:OPENAI_API_KEY `
+  -e MINIO_ENDPOINT=http://minio:9000 `
+  -e MINIO_ACCESS_KEY=$env:MINIO_ACCESS_KEY `
+  -e MINIO_SECRET_KEY=$env:MINIO_SECRET_KEY `
+  library python scripts/smoke_worker.py
+```
+
+## 9. Known limitations and follow-up work
 
 The following are known, not silently solved:
 
 1. **No Library HTTP API or auth integration.** Library has only health. A future
    API needs routing, DI, domain-error-to-HTTP mapping, and trusted user identity.
-2. **No worker.** There is no polling loop, queue, locking strategy, or automatic
-   scheduling for `pending` extraction or `extracted` compression.
+2. **Worker deployment/concurrency.** A polling loop exists, but Compose does not
+   run it as a separate service. It has no row locking, multi-worker coordination,
+   graceful shutdown, or metrics.
 3. **No cascade-delete policy.** Child rows/objects need an explicit deletion
    strategy before exposing destructive operations.
 4. **Web SSRF risk.** `WebpageExtractor` accepts user-controlled URLs without
@@ -405,7 +453,7 @@ The following are known, not silently solved:
 8. **Media initialization cost.** Constructing `MediaExtractor` loads a Whisper
    model immediately.
 
-## 9. Working-tree and safety rules
+## 10. Working-tree and safety rules
 
 - Preserve unrelated dirty changes. Do not discard user work.
 - Do not use `git reset --hard` or destructive checkout commands unless the user

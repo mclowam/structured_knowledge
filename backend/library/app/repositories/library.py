@@ -38,6 +38,12 @@ class LibraryRepository:
         )
         return result.scalar_one_or_none()
 
+    async def list_by_status(self, status: LibraryStatus) -> list[Library]:
+        result = await self._session.execute(
+            select(Library).where(Library.status == status)
+        )
+        return list(result.scalars().all())
+
     async def list_by_knowledge(self, knowledge_id: uuid.UUID) -> list[Library]:
         result = await self._session.execute(
             select(Library)

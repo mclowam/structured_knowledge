@@ -27,6 +27,9 @@ class Config:
 
     OPENAI_API_KEY: str = _required_env("OPENAI_API_KEY")
     COMPRESSION_MODEL: str = getenv("COMPRESSION_MODEL", "gpt-5-mini")
+    WORKER_POLL_INTERVAL_SECONDS: int = int(
+        getenv("WORKER_POLL_INTERVAL_SECONDS", "10")
+    )
 
     PUBLIC_BASE_URL: str = ""
     LOCAL_BASE_URL: str = "http://localhost:8001"
