@@ -27,8 +27,11 @@ class LibraryChunkRepository:
         )
         return list(result.scalars().all())
 
-    async def delete_by_library(self, library_id: uuid.UUID) -> None:
+    async def delete_by_library(
+        self, library_id: uuid.UUID, commit: bool = True
+    ) -> None:
         await self._session.execute(
             delete(LibraryChunk).where(LibraryChunk.library_id == library_id)
         )
-        await self._session.commit()
+        if commit:
+            await self._session.commit()

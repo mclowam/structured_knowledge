@@ -21,3 +21,8 @@ class KnowledgeResponseSchema(BaseModel):
 class KnowledgeCreateSchema(BaseModel):
     title: str
     description: Optional[str] = None
+
+
+class KnowledgeUpdateSchema(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None

@@ -96,6 +96,7 @@ class LibraryRepository:
         await self._session.refresh(library)
         return library
 
-    async def delete(self, library: Library) -> None:
+    async def delete(self, library: Library, commit: bool = True) -> None:
         await self._session.delete(library)
-        await self._session.commit()
+        if commit:
+            await self._session.commit()

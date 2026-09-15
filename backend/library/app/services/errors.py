@@ -6,6 +6,10 @@ class KnowledgeAccessDeniedError(Exception):
     pass
 
 
+class LibraryNotFoundError(Exception):
+    pass
+
+
 class ExtractionError(Exception):
     pass
 

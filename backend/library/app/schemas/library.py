@@ -29,8 +29,9 @@ class LibraryResponseSchema(BaseModel):
     updated_at: Optional[datetime] = None
 
 
-class LibraryCreateSchema(BaseModel):
-    title: str
+class LibraryUrlCreateSchema(BaseModel):
+    url: str
+    title: Optional[str] = None
 
 
 @dataclass

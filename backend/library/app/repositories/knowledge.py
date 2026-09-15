@@ -54,6 +54,7 @@ class KnowledgeRepository:
         await self._session.refresh(knowledge)
         return knowledge
 
-    async def delete(self, knowledge: Knowledge) -> None:
+    async def delete(self, knowledge: Knowledge, commit: bool = True) -> None:
         await self._session.delete(knowledge)
-        await self._session.commit()
+        if commit:
+            await self._session.commit()
