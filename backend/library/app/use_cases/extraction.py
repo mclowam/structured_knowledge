@@ -4,7 +4,7 @@ from app.core.config import Config
 from app.repositories.extractors.chunker import TextChunker
 from app.repositories.extractors.dispatcher import ExtractionDispatcher
 from app.repositories.extractors.docs import DocxExtractor
-from app.repositories.extractors.media import MediaExtractor
+from app.repositories.extractors.media import LazyMediaExtractor
 from app.repositories.extractors.pdf import PdfExtractor
 from app.repositories.extractors.webpage import WebpageExtractor
 from app.repositories.extractors.youtube import YoutubeExtractor
@@ -16,7 +16,9 @@ from app.storage.document_storage import DocumentStorage
 
 def build_extraction_dispatcher(settings: Config) -> ExtractionDispatcher:
     storage = DocumentStorage(settings)
-    media_extractor = MediaExtractor()
+    # PDF/DOCX extraction must not download/load Whisper. The proxy constructs
+    # MediaExtractor only for audio/video or YouTube STT fallback.
+    media_extractor = LazyMediaExtractor()
 
     return ExtractionDispatcher(
         storage=storage,

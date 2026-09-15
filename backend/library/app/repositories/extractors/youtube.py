@@ -7,13 +7,13 @@ from pathlib import Path
 import webvtt
 import yt_dlp
 
-from app.repositories.extractors.media import MediaExtractor
+from app.repositories.extractors.media import LazyMediaExtractor, MediaExtractor
 from app.schemas.library import ExtractedContent
 from app.services.errors import ExtractionError
 
 
 class YoutubeExtractor:
-    def __init__(self, media_extractor: MediaExtractor):
+    def __init__(self, media_extractor: MediaExtractor | LazyMediaExtractor):
         self._media_extractor = media_extractor
 
     async def extract(self, url: str) -> ExtractedContent:

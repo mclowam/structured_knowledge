@@ -6,6 +6,18 @@ from app.schemas.library import ExtractedContent
 from app.services.errors import ExtractionError
 
 
+class LazyMediaExtractor:
+    """Create the Whisper-backed extractor only when media extraction is needed."""
+
+    def __init__(self) -> None:
+        self._extractor: MediaExtractor | None = None
+
+    async def extract(self, local_path: str) -> ExtractedContent:
+        if self._extractor is None:
+            self._extractor = MediaExtractor()
+        return await self._extractor.extract(local_path)
+
+
 class MediaExtractor:
     def __init__(self, model_size: str = "small", device: str = "cpu"):
         self._model = WhisperModel(model_size, device=device, compute_type="int8")
