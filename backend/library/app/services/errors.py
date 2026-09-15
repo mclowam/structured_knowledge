@@ -4,3 +4,15 @@ class KnowledgeNotFoundError(Exception):
 
 class KnowledgeAccessDeniedError(Exception):
     pass
+
+
+class ExtractionError(Exception):
+    pass
+
+
+class EmptyTextLayerError(ExtractionError):
+    pass
+
+
+class UnsupportedSourceError(ExtractionError):
+    pass
