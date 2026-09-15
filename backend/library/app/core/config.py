@@ -3,6 +3,13 @@ from os import getenv
 import aioboto3
 
 
+def _required_env(name: str) -> str:
+    value = getenv(name)
+    if not value:
+        raise RuntimeError(f"Required environment variable is missing: {name}")
+    return value
+
+
 class Config:
     DB_HOST: str = getenv("DB_HOST", "localhost")
     DB_PORT: str = getenv("DB_PORT", "5434")
@@ -17,6 +24,9 @@ class Config:
     MINIO_ACCESS_KEY: str = os.getenv("MINIO_ACCESS_KEY", "admin")
     MINIO_SECRET_KEY: str = os.getenv("MINIO_SECRET_KEY", "password123")
     MINIO_BUCKET: str = os.getenv("MINIO_BUCKET", "library-documents")
+
+    OPENAI_API_KEY: str = _required_env("OPENAI_API_KEY")
+    COMPRESSION_MODEL: str = getenv("COMPRESSION_MODEL", "gpt-5-mini")
 
     PUBLIC_BASE_URL: str = ""
     LOCAL_BASE_URL: str = "http://localhost:8001"

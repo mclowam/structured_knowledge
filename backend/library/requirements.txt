@@ -40,6 +40,7 @@ Mako==1.4.1
 MarkupSafe==3.0.3
 numpy==2.4.6
 onnxruntime==1.30.0
+openai
 packaging==26.3
 passlib==1.7.4
 pillow==12.3.0
