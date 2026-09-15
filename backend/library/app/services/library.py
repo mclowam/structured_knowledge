@@ -2,8 +2,8 @@ import uuid
 from typing import Optional
 
 from app.services.knowledge import KnowledgeService
-from app.services.knowledge_abc import IKnowledgeRepository
-from app.services.library_abc import ILibraryRepository
+from app.abstractions.knowledge import IKnowledgeRepository
+from app.abstractions.library import ILibraryRepository
 from app.models.library import Library, SourceType, LibraryStatus
 
 

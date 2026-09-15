@@ -1,10 +1,8 @@
-import enum
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
-
-from pydantic import BaseModel, Field
-
+from dataclasses import dataclass
+from pydantic import BaseModel
 from app.schemas.enums import LibraryStatus, SourceType
 
 
@@ -30,9 +28,14 @@ class LibraryResponseSchema(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
 
+
 class LibraryCreateSchema(BaseModel):
     title: str
 
 
-
-
+@dataclass
+class ExtractedContent:
+    text: str
+    title: Optional[str] = None
+    page_count: Optional[int] = None
+    duration_seconds: Optional[float] = None
