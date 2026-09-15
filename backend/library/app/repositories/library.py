@@ -72,6 +72,18 @@ class LibraryRepository:
         await self._session.refresh(library)
         return library
 
+    async def complete_compression(
+        self,
+        library: Library,
+        compressed_content: str,
+    ) -> Library:
+        library.compressed_content = compressed_content
+        library.status = LibraryStatus.compressed
+        library.error_message = None
+        await self._session.commit()
+        await self._session.refresh(library)
+        return library
+
     async def update_title(self, library: Library, title: str) -> Library:
         library.title = title
         await self._session.commit()
