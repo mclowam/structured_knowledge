@@ -31,14 +31,21 @@ async def login(payload: UserLoginSchema,
 
 
 @api_v1_router.get("/users", response_model=list[UserResponseSchema])
-async def get_users(service: UserService = Depends(get_user_service)):
+async def get_users(
+        service: UserService = Depends(get_user_service),
+        _: UserPayload = Depends(get_current_user),
+):
     result = await service.list_users()
 
     return result
 
 
 @api_v1_router.get("/users/{user_id}", response_model=UserResponseSchema)
-async def detail_user(user_id: uuid.UUID, service: UserService = Depends(get_user_service)):
+async def detail_user(
+        user_id: uuid.UUID,
+        service: UserService = Depends(get_user_service),
+        _: UserPayload = Depends(get_current_user),
+):
     result = await service.detail(id=user_id)
 
     return result
