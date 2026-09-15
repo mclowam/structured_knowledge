@@ -1,5 +1,10 @@
-import tempfile
+import html
 import os
+import re
+import tempfile
+from pathlib import Path
+
+import webvtt
 import yt_dlp
 
 from app.repositories.extractors.media import MediaExtractor
@@ -24,18 +29,52 @@ class YoutubeExtractor:
                 os.remove(audio_path)
 
     def _try_get_subtitles(self, url: str) -> str | None:
-        opts = {
+        metadata_opts = {
             "skip_download": True,
-            "writesubtitles": True,
-            "writeautomaticsub": True,
-            "subtitleslangs": ["ru", "en"],
             "quiet": True,
         }
-        with yt_dlp.YoutubeDL(opts) as ydl:
-            info = ydl.extract_info(url, download=False)
-            subs = info.get("subtitles") or info.get("automatic_captions") or {}
-            if not subs:
+        try:
+            with yt_dlp.YoutubeDL(metadata_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+
+            subtitles = info.get("subtitles") or info.get("automatic_captions")
+            if not subtitles:
                 return None
+
+            with tempfile.TemporaryDirectory() as directory:
+                options = {
+                    "skip_download": True,
+                    "writesubtitles": True,
+                    "writeautomaticsub": True,
+                    "subtitleslangs": ["ru", "en"],
+                    "subtitlesformat": "vtt/best",
+                    "outtmpl": str(Path(directory) / "%(id)s.%(ext)s"),
+                    "quiet": True,
+                    "no_warnings": True,
+                }
+                with yt_dlp.YoutubeDL(options) as ydl:
+                    ydl.download([url])
+
+                for subtitle_path in Path(directory).rglob("*.vtt"):
+                    text = self._parse_vtt(subtitle_path)
+                    if text:
+                        return text
+        except Exception:
+            return None
+
+        return None
+
+    @staticmethod
+    def _parse_vtt(path: Path) -> str | None:
+        try:
+            captions = webvtt.read(str(path))
+            lines: list[str] = []
+            for caption in captions:
+                text = html.unescape(re.sub(r"<[^>]+>", "", caption.text)).strip()
+                if text and (not lines or text != lines[-1]):
+                    lines.append(text)
+            return "\n".join(lines) or None
+        except Exception:
             return None
 
     def _download_audio(self, url: str) -> str:
