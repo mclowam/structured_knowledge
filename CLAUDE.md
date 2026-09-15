@@ -50,6 +50,9 @@ docker compose up --build
 Source directories are bind-mounted into `/service`. The Dockerfiles start
 `uvicorn app.main:app --host 0.0.0.0 --port 8000`; reload is not enabled.
 The library image installs `ffmpeg`, required by video/media extraction.
+After changing `backend/library/requirements.txt`, rebuild the library image;
+a source bind mount does not install newly declared Python packages into an
+existing container.
 
 ### Environment files and secrets
 
@@ -211,6 +214,11 @@ The dispatcher is built with `DocumentStorage`, `PdfExtractor`,
 
 `MediaExtractor` constructs its Faster-Whisper model immediately. Do not build
 the extraction service per web request unless that startup cost is acceptable.
+More importantly, `build_extraction_dispatcher()` constructs a
+`MediaExtractor` for every extraction service, including PDF and DOCX-only
+work. Thus a PDF worker run currently requires the Faster-Whisper `small`
+model to be available locally even though the PDF extractor itself does not use
+speech-to-text.
 
 ### Lifecycle and persistence
 
@@ -432,6 +440,14 @@ docker compose exec -T `
   library python scripts/smoke_worker.py
 ```
 
+For a real PDF E2E run, the library container also needs a complete cached
+`Systran/faster-whisper-small` model. The current dispatcher eagerly constructs
+`MediaExtractor`; if Hugging Face cannot download the model (for example due to
+TLS interception or missing network access), the worker logs an unexpected
+per-library error before `ExtractionService.run()` can set the record to
+`extracting` or `failed`. The row remains `pending` and will be retried by
+the next worker tick.
+
 ## 9. Known limitations and follow-up work
 
 The following are known, not silently solved:
@@ -450,8 +466,12 @@ The following are known, not silently solved:
    which this service has no HTTP endpoint.
 7. **No LLM retry/cost controls.** Compression has no retry/backoff, caching,
    token accounting, or provider abstraction.
-8. **Media initialization cost.** Constructing `MediaExtractor` loads a Whisper
-   model immediately.
+8. **Eager Whisper dependency blocks non-media extraction.**
+   `build_extraction_dispatcher()` constructs `MediaExtractor` even for a PDF
+   source. A missing/unavailable Faster-Whisper model can therefore keep a PDF
+   `pending` before `ExtractionService.run()` records any status transition.
+   Lazy media construction or per-source extractor construction would remove this
+   coupling, but is not implemented.
 
 ## 10. Working-tree and safety rules
 
