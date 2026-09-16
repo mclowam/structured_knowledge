@@ -6,7 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.config import Config, settings
 from app.db.session import async_session_maker
-from app.models.library import Library, LibraryStatus
+# Import the registration module before creating sessions/repositories so all
+# string-based foreign-key targets exist in Base.metadata in this process.
+from app.models import Knowledge, Library, LibraryChunk
+from app.models.library import LibraryStatus
 from app.repositories.library import LibraryRepository
 from app.use_cases.compression import build_compression_service
 from app.use_cases.extraction import build_extraction_service
