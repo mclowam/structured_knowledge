@@ -1,9 +1,3 @@
-"""Manually exercise CompressionService with an extracted Library row.
-
-Run in the library container with OPENAI_API_KEY configured:
-    docker compose exec library python scripts/smoke_compression_service.py
-"""
-
 import asyncio
 import uuid
 

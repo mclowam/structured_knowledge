@@ -1,9 +1,3 @@
-"""Run one worker tick against a pending and an extracted Library.
-
-Run in the library container with MinIO and OPENAI_API_KEY configured:
-    docker compose exec library python scripts/smoke_worker.py
-"""
-
 import asyncio
 import uuid
 from pathlib import Path

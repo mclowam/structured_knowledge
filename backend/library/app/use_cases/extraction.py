@@ -16,8 +16,6 @@ from app.storage.document_storage import DocumentStorage
 
 def build_extraction_dispatcher(settings: Config) -> ExtractionDispatcher:
     storage = DocumentStorage(settings)
-    # PDF/DOCX extraction must not download/load Whisper. The proxy constructs
-    # MediaExtractor only for audio/video or YouTube STT fallback.
     media_extractor = LazyMediaExtractor()
 
     return ExtractionDispatcher(
