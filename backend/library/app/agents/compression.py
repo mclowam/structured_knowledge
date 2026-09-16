@@ -1,17 +1,11 @@
-"""OpenAI-backed text compression without persistence or HTTP concerns."""
 
 from openai import AsyncOpenAI
 
 from app.core.config import Config
 from app.repositories.extractors.chunker import TextChunker
 
-# This threshold chooses between one LLM request and map-reduce. It is deliberately
-# separate from ExtractionService.CHUNK_THRESHOLD_CHARS: that threshold decides how
-# extracted content is stored in the database, while this one budgets an LLM call.
 COMPRESSION_MAP_REDUCE_THRESHOLD_CHARS = 4_000
 
-# TextChunker chunks by words, not characters. Pass an agent-owned value explicitly
-# so a future storage-chunking change cannot silently alter LLM request sizes.
 COMPRESSION_CHUNK_MAX_WORDS = 800
 
 MAP_PROMPT_TEMPLATE = """Сожми следующий фрагмент в структурированный конспект.
@@ -40,7 +34,6 @@ class CompressionAgent:
 
     @property
     def last_chunk_count(self) -> int:
-        """Number of map chunks used by the latest ``compress`` call."""
         return self._last_chunk_count
 
     async def compress(self, text: str) -> str:

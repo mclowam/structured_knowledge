@@ -7,7 +7,6 @@ from app.services.errors import ExtractionError
 
 
 class LazyMediaExtractor:
-    """Create the Whisper-backed extractor only when media extraction is needed."""
 
     def __init__(self) -> None:
         self._extractor: MediaExtractor | None = None

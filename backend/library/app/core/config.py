@@ -20,8 +20,6 @@ class Config:
     SECRET_KEY: str = getenv("SECRET_KEY")
     ALGORITHM: str = "HS256"
 
-    # MVP: Library validates Auth access tokens locally with the shared secret.
-    # Production should use asymmetric JWTs or token introspection instead.
     AUTH_SECRET_KEY: str = _required_env("AUTH_SECRET_KEY")
 
     MINIO_ENDPOINT: str = os.getenv("MINIO_ENDPOINT", "http://localhost:9100")

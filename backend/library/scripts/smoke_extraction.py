@@ -1,9 +1,3 @@
-"""Manually exercise the PDF extraction path against the running library stack.
-
-Run from the repository root after `docker compose up -d` and migrations:
-    docker compose exec library python scripts/smoke_extraction.py
-"""
-
 import asyncio
 import uuid
 from pathlib import Path

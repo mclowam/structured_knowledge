@@ -9,7 +9,9 @@ from app.services.register import RegisterService
 from app.services.users import UserService
 from app.use_cases.users import get_register_service, get_login_service, get_user_service, get_refresh_service
 
-api_v1_router = APIRouter()
+api_v1_router = APIRouter(
+    prefix="/auth"
+)
 
 
 @api_v1_router.post("/register", response_model=UserPostCreateSchema, status_code=201)

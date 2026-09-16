@@ -1,9 +1,3 @@
-"""Manually exercise short and map-reduce compression with OpenAI.
-
-Run locally from backend/library with OPENAI_API_KEY set:
-    python scripts/smoke_compression.py
-"""
-
 import asyncio
 
 from app.agents.compression import (
