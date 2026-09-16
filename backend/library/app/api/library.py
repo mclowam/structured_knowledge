@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from starlette.datastructures import UploadFile
 
 from app.core.security.deps import CurrentUser, get_current_user
+from app.repositories.extractors.dispatcher import FILE_TYPE_BY_EXTENSION
 from app.schemas.knowledge import (
     KnowledgeCreateSchema,
     KnowledgeResponseSchema,
@@ -100,8 +101,20 @@ async def create_library(
         if not isinstance(uploaded_file, UploadFile):
             raise HTTPException(status_code=422, detail="multipart field 'file' is required")
 
-        filename = uploaded_file.filename or "document"
-        extension = Path(filename).suffix.lstrip(".") or "bin"
+        filename = Path(uploaded_file.filename or "").name
+        extension = Path(filename).suffix.lower().lstrip(".")
+        if not extension or extension not in FILE_TYPE_BY_EXTENSION:
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail="unsupported file extension",
+        )
+
+        form_title = form.get("title")
+        title = (
+            form_title.strip()
+            if isinstance(form_title, str) and form_title.strip()
+            else filename
+        )
         object_key = build_minio_key(current_user.user_id, uuid.uuid4(), extension)
         await service.upload_document(
             uploaded_file.file,
@@ -112,7 +125,7 @@ async def create_library(
             knowledge_id=knowledge_id,
             user_id=current_user.user_id,
             original_ref=object_key,
-            title=filename,
+            title=title,
         )
 
     if content_type.startswith("application/json"):
