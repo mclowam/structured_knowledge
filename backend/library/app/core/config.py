@@ -32,6 +32,7 @@ class Config:
     WORKER_POLL_INTERVAL_SECONDS: int = int(
         getenv("WORKER_POLL_INTERVAL_SECONDS", "10")
     )
+    COMPRESSION_MAP_CONCURRENCY: int = 5
 
     PUBLIC_BASE_URL: str = ""
     LOCAL_BASE_URL: str = "http://localhost:8001"

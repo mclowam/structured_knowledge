@@ -1,6 +1,5 @@
-
+import asyncio
 from openai import AsyncOpenAI
-
 from app.core.config import Config
 from app.repositories.extractors.chunker import TextChunker
 
@@ -31,6 +30,8 @@ class CompressionAgent:
         self._model = model or settings.COMPRESSION_MODEL
         self._chunker = TextChunker(max_chunk_words=COMPRESSION_CHUNK_MAX_WORDS)
         self._last_chunk_count = 0
+        self._map_concurrency = settings.COMPRESSION_MAP_CONCURRENCY
+
 
     @property
     def last_chunk_count(self) -> int:
@@ -47,12 +48,23 @@ class CompressionAgent:
 
         chunks = self._chunker.split(normalized_text)
         self._last_chunk_count = len(chunks)
-        summaries: list[str] = []
-        for chunk in chunks:
-            summaries.append(
-                await self._complete(MAP_PROMPT_TEMPLATE.format(text=chunk))
-            )
 
+        semaphore = asyncio.Semaphore(self._map_concurrency)
+
+        async def map_chunk(chunk: str) -> str:
+            async with semaphore:
+                return await self._complete(MAP_PROMPT_TEMPLATE.format(text=chunk))
+
+        results = await asyncio.gather(
+            *(map_chunk(chunk) for chunk in chunks),
+            return_exceptions=True,
+        )
+
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
+
+        summaries: list[str] = results  # type: ignore[assignment]
         return await self._complete(
             REDUCE_PROMPT_TEMPLATE.format(summaries="\n\n".join(summaries))
         )
