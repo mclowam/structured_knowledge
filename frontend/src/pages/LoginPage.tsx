@@ -1,0 +1,60 @@
+import { useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
+import { ApiError } from '../api/client'
+import { useAuth } from '../auth/AuthContext'
+
+function errorMessage(error: unknown): string {
+  return error instanceof ApiError ? error.detail : 'request failed'
+}
+
+export function LoginPage() {
+  const { user, login } = useAuth()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  if (user) return <Navigate to="/" replace />
+
+  return (
+    <div className="layout">
+      <h1>Login</h1>
+      <form
+        className="card"
+        onSubmit={async (event) => {
+          event.preventDefault()
+          setBusy(true)
+          setError('')
+          try {
+            await login(username, password)
+          } catch (err) {
+            setError(errorMessage(err))
+          } finally {
+            setBusy(false)
+          }
+        }}
+      >
+        <input
+          placeholder="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        />
+        <input
+          placeholder="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        {error ? <div className="error">{error}</div> : null}
+        <button type="submit" disabled={busy}>
+          login
+        </button>
+      </form>
+      <p>
+        No account? <Link to="/register">register</Link>
+      </p>
+    </div>
+  )
+}
