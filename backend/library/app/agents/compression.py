@@ -1,5 +1,7 @@
 import asyncio
 from openai import AsyncOpenAI
+
+from app.agents.prompts import MAP_PROMPT_TEMPLATE, REDUCE_PROMPT_TEMPLATE
 from app.core.config import Config
 from app.repositories.extractors.chunker import TextChunker
 
@@ -7,21 +9,7 @@ COMPRESSION_MAP_REDUCE_THRESHOLD_CHARS = 4_000
 
 COMPRESSION_CHUNK_MAX_WORDS = 800
 
-MAP_PROMPT_TEMPLATE = """Сожми следующий фрагмент в структурированный конспект.
-Сохрани факты, определения, причинно-следственные связи и важные числа. Не добавляй
-информацию, которой нет в тексте.
 
-Фрагмент:
-{text}
-"""
-
-REDUCE_PROMPT_TEMPLATE = """Объедини конспекты фрагментов в единый связный конспект.
-Убери повторы, сохрани ключевые факты, определения, причинно-следственные связи и
-важные числа. Не добавляй информацию, которой нет в исходных конспектах.
-
-Конспекты фрагментов:
-{summaries}
-"""
 
 
 class CompressionAgent:
