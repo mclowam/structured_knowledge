@@ -6,20 +6,30 @@ from app.core.config import Config
 from app.repositories.extractors.chunker import TextChunker
 
 COMPRESSION_MAP_REDUCE_THRESHOLD_CHARS = 4_000
-
 COMPRESSION_CHUNK_MAX_WORDS = 800
-
-
+OPENAI_TIMEOUT_SECONDS = 60.0
 
 
 class CompressionAgent:
     def __init__(self, settings: Config, model: str | None = None) -> None:
-        self._client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+        self._client = AsyncOpenAI(
+            api_key=settings.OPENAI_API_KEY,
+            timeout=OPENAI_TIMEOUT_SECONDS,
+            max_retries=2,
+        )
         self._model = model or settings.COMPRESSION_MODEL
         self._chunker = TextChunker(max_chunk_words=COMPRESSION_CHUNK_MAX_WORDS)
         self._last_chunk_count = 0
         self._map_concurrency = settings.COMPRESSION_MAP_CONCURRENCY
 
+    async def __aenter__(self) -> "CompressionAgent":
+        return self
+
+    async def __aexit__(self, *exc_info) -> None:
+        await self.aclose()
+
+    async def aclose(self) -> None:
+        await self._client.close()
 
     @property
     def last_chunk_count(self) -> int:
@@ -34,7 +44,7 @@ class CompressionAgent:
             self._last_chunk_count = 0
             return await self._complete(MAP_PROMPT_TEMPLATE.format(text=normalized_text))
 
-        chunks = self._chunker.split(normalized_text)
+        chunks = await asyncio.to_thread(self._chunker.split, normalized_text)
         self._last_chunk_count = len(chunks)
 
         semaphore = asyncio.Semaphore(self._map_concurrency)
@@ -43,16 +53,13 @@ class CompressionAgent:
             async with semaphore:
                 return await self._complete(MAP_PROMPT_TEMPLATE.format(text=chunk))
 
-        results = await asyncio.gather(
-            *(map_chunk(chunk) for chunk in chunks),
-            return_exceptions=True,
-        )
+        try:
+            async with asyncio.TaskGroup() as tg:
+                tasks = [tg.create_task(map_chunk(chunk)) for chunk in chunks]
+        except ExceptionGroup as eg:
+            raise eg.exceptions[0] from None
 
-        for result in results:
-            if isinstance(result, BaseException):
-                raise result
-
-        summaries: list[str] = results
+        summaries = [task.result() for task in tasks]
         return await self._complete(
             REDUCE_PROMPT_TEMPLATE.format(summaries="\n\n".join(summaries))
         )
