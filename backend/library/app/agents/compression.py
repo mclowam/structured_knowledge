@@ -64,7 +64,7 @@ class CompressionAgent:
             if isinstance(result, BaseException):
                 raise result
 
-        summaries: list[str] = results  # type: ignore[assignment]
+        summaries: list[str] = results
         return await self._complete(
             REDUCE_PROMPT_TEMPLATE.format(summaries="\n\n".join(summaries))
         )
