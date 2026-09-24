@@ -1,0 +1,12 @@
+:root {
+  --color-bg: #f5efe3;
+  --color-surface: #fffdf8;
+  --color-ink: #2b2620;
+  --color-ink-muted: #6b6255;
+  --color-accent: #c1440e;
+  --color-border: #ded2ba;
+  --font-heading: 'Caveat', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --radius-card: 12px;
+  --shadow-card: 0 2px 8px rgba(43, 38, 32, 0.08);
+}
