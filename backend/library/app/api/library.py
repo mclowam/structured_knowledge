@@ -7,6 +7,7 @@ from starlette.datastructures import UploadFile
 
 from app.core.security.deps import CurrentUser, get_current_user
 from app.repositories.extractors.dispatcher import FILE_TYPE_BY_EXTENSION
+from app.repositories.extractors.source_assets import SourceAssetNotFoundError
 from app.schemas.knowledge import (
     KnowledgeCreateSchema,
     KnowledgeResponseSchema,
@@ -175,3 +176,42 @@ async def delete_library(
 ) -> Response:
     await service.delete_owned(library_id, current_user.user_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@api_v1_router.get("/libraries/{library_id}/source", response_class=Response)
+async def get_library_source(
+    library_id: uuid.UUID,
+    current_user: CurrentUser = Depends(get_current_user),
+    service: LibraryService = Depends(get_library_service),
+) -> Response:
+    try:
+        data, content_type, filename = await service.get_source_owned(library_id, current_user.user_id)
+    except SourceAssetNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return Response(
+        content=data,
+        media_type=content_type,
+        headers={
+            "Cache-Control": "private, no-store",
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+@api_v1_router.get("/libraries/{library_id}/assets/{name}", response_class=Response)
+async def get_library_asset(
+    library_id: uuid.UUID,
+    name: str,
+    current_user: CurrentUser = Depends(get_current_user),
+    service: LibraryService = Depends(get_library_service),
+) -> Response:
+    try:
+        data = await service.get_asset_owned(library_id, current_user.user_id, name)
+    except SourceAssetNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return Response(
+        content=data,
+        media_type="image/png",
+        headers={"Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff"},
+    )
