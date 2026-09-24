@@ -1,0 +1,34 @@
+.progress {
+  display: inline-block;
+  width: 100%;
+  height: 16px;
+}
+
+.progress svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.track,
+.stroke {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.track {
+  stroke: var(--color-border);
+}
+
+.stroke {
+  stroke: var(--color-accent);
+  transition: stroke-dashoffset 300ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stroke {
+    transition: none;
+  }
+}
