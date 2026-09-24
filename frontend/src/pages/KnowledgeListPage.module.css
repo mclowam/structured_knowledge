@@ -1,0 +1,95 @@
+.workspace {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  align-items: start;
+  gap: 32px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.upload h2,
+.create h2 {
+  font-size: 25px;
+}
+
+.upload {
+  border-color: var(--color-ink);
+}
+
+.formIntro {
+  margin-bottom: 2px;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+
+.collectionsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 18px;
+}
+
+.collectionsHeader h2 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 25px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.collections {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.collection {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+}
+
+.collectionNumber {
+  margin-bottom: 10px;
+  color: var(--color-ink-muted);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.collection h3 {
+  margin-bottom: 10px;
+}
+
+.collection h3 a {
+  color: var(--color-ink);
+}
+
+.description {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.collectionActions {
+  display: flex;
+  align-items: flex-end;
+}
+
+@media (max-width: 850px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .sidebar {
+    position: static;
+  }
+}
